@@ -32,7 +32,7 @@ export function Energy() {
             ⚡ Energy Dashboard
           </Typography>
           <Button
-            color="blue-gray"
+            color="black"
             onClick={loadData}
             disabled={loading}
             className="whitespace-nowrap"

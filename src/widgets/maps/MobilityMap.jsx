@@ -11,6 +11,23 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+
+
+export const trafficLightIcon = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/483/483511.png",
+  iconSize: [32, 32],
+});
+
+export const trafficSensorIcon = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  iconSize: [32, 32],
+});
+
+export const defaultIcon = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854866.png",
+  iconSize: [28, 28],
+});
+
 export function MobilityMap({ sensors = [], lights = [] }) {
   // Combine all devices into one list
   const allDevices = [
@@ -107,7 +124,13 @@ export function MobilityMap({ sensors = [], lights = [] }) {
             <Marker
               key={d.deviceName}
               position={[d.lat, d.lng]}
-            >
+              icon={
+                d.type === "light"
+                  ? trafficLightIcon
+                  : d.type === "sensor"
+                  ? trafficSensorIcon
+                  : defaultIcon}>
+
               <Popup>
                 <strong>{d.deviceName}</strong>
                 <br />
