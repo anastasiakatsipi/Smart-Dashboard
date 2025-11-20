@@ -36,13 +36,7 @@ export function Home() {
       setTrafficLightsCount(lights.length);
       setTrafficSensorsCount(sensors.length);
 
-      // Μικτός χάρτης overview
-      const combinedPoints = [
-        ...env.map((e) => ({ lat: e.lat, lng: e.lng, name: e.name })),
-        ...lights.map((l) => ({ lat: l.geometry.coordinates[1], lng: l.geometry.coordinates[0], name: l.properties.deviceName })),
-      ].slice(0, 20);
-
-      setMapPoints(combinedPoints);
+      
     } catch (err) {
       console.error("Dashboard fetch error:", err);
     }
