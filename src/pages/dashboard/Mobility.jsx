@@ -33,11 +33,11 @@ export function Mobility() {
       <Card className="shadow-md border border-blue-gray-100">
         <CardHeader floated={false} shadow={false} className="p-4 flex items-center justify-between">
           {/* Page Title */}
-        <Typography variant="h2" color="blue-gray" className="font-bold">
+        <Typography variant="h2" color="dark" className="font-bold">
           🚦 Mobility Dashboard
         </Typography>
           {/* Refresh Button */}
-          <Button onClick={loadData} color="blue-gray" disabled={loading}>
+          <Button onClick={loadData} color="dark" disabled={loading}>
             {loading ? "Φόρτωση..." : "Ανανέωση"}
           </Button>
         </CardHeader>

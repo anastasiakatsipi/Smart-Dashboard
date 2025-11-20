@@ -33,7 +33,7 @@ export function Environment() {
                 <Typography variant="h2" color="blue-gray" className="font-bold">
                   🌿 Environment Dashboard
                 </Typography>
-                <Button onClick={loadData} color="black" disabled={loading}>
+                <Button onClick={loadData} color="dark" disabled={loading}>
                     {loading ? "Φόρτωση..." : "Ανανέωση"}
                 </Button>
               </CardHeader>
