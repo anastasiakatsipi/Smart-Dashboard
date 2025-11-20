@@ -18,6 +18,7 @@ export async function fetchEnvironmentData() {
 
     return {
       name: props.deviceName || props.name,
+      displayName: props.building_name || null,
       lat: f.geometry.coordinates[1],
       lng: f.geometry.coordinates[0],
 

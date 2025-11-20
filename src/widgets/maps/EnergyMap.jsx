@@ -1,5 +1,4 @@
-// src/widgets/maps/SchoolMap.jsx
-
+// src/widgets/maps/EnergyMap.jsx
 import React, { useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -12,58 +11,66 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-export function SchoolMap({ schools }) {
-  const [selected, setSelected] = useState(schools.map((s) => s.name));
+export function EnergyMap({ devices = [] }) {
 
-  const toggleSchool = (name) => {
+  // Μοναδικό κλειδί = deviceName
+  const [selected, setSelected] = useState(
+    devices.map((d) => d.deviceName)
+  );
+
+  const toggleDevice = (deviceName) => {
     setSelected((prev) =>
-      prev.includes(name)
-        ? prev.filter((n) => n !== name)
-        : [...prev, name]
+      prev.includes(deviceName)
+        ? prev.filter((x) => x !== deviceName)
+        : [...prev, deviceName]
     );
   };
 
-  const filtered = schools.filter((s) => selected.includes(s.name));
+  const filtered = devices.filter((d) =>
+    selected.includes(d.name)
+  );
 
   return (
     <div className="flex w-full h-full gap-4 overflow-hidden">
-      
-      {/* --- LEFT SIDEBAR --- */}
+
+      {/* ---------- SIDEBAR ---------- */}
       <div
         className="w-64 bg-white rounded-xl shadow-md border border-blue-gray-100 p-4 flex-shrink-0"
         style={{ maxHeight: "100%", overflowY: "auto" }}
       >
         <h3 className="text-lg font-semibold text-blue-gray-800 mb-3">
-          🧭 Επιλογή σχολείων
+          ⚡ Επιλογή Ενεργειακών Σημείων
         </h3>
 
         <div className="space-y-2">
-          {schools.map((s) => (
+          {devices.map((d) => (
             <label
-              key={s.building_name}
+              key={d.name}
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-gray-50 cursor-pointer"
             >
               <input
                 type="checkbox"
-                checked={selected.includes(s.name)}
-                onChange={() => toggleSchool(s.name)}
+                checked={selected.includes(d.name)}
+                onChange={() => toggleDevice(d.name)}
                 className="w-4 h-4 accent-blue-gray-700"
               />
-              <span className="text-blue-gray-700 text-sm">{s.name}</span>
+              <span className="text-blue-gray-700 text-sm">
+                {d.name}
+              </span>
             </label>
           ))}
         </div>
       </div>
 
-      {/* --- RIGHT MAP AREA --- */}
+      {/* ---------- MAP AREA ---------- */}
       <div
         className="flex-1 rounded-xl overflow-hidden border border-blue-gray-100 shadow-md"
-        style={{ height: "500px" }}   // <– Keeps map inside container
+        style={{ height: "500px" }}
       >
         <MapContainer
           center={[36.44, 28.22]}
-          zoom={11}
-          scrollWheelZoom={true}
+          zoom={12}
+          scrollWheelZoom
           className="w-full h-full"
         >
           <TileLayer
@@ -71,12 +78,25 @@ export function SchoolMap({ schools }) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {filtered.map((s, i) => (
-            <Marker key={i} position={[s.lat, s.lng]}>
+          {filtered.map((d) => (
+            <Marker
+              key={d.name}
+              position={[d.lat, d.lng]}
+            >
               <Popup>
-                <strong>{s.name}</strong> <br />
-                CO₂: {s.co2 ?? "N/A"} ppm <br />
-                Θερμοκρασία: {s.temperature ?? "N/A"} °C
+                <strong>{d.name}</strong>
+                <br />
+                <small className="text-gray-600">
+                  Last update: {d.dateObserved}
+                </small>
+                <hr />
+
+                <div>
+                  Fuel tank: <b>{d.fuel_tank ?? "N/A"}</b> L<br />
+                  Power consumption: <b>{d.power_consumption ?? "N/A"}</b> kWh<br />
+                  Temperature: <b>{d.temperature ?? "N/A"}</b> °C<br />
+                  Humidity: <b>{d.humidity ?? "N/A"}</b> %
+                </div>
               </Popup>
             </Marker>
           ))}
@@ -86,4 +106,4 @@ export function SchoolMap({ schools }) {
   );
 }
 
-export default SchoolMap;
+export default EnergyMap;
