@@ -19,6 +19,19 @@ export function MetricBarChart({
   yLabel,
 }) {
   const hasData = Array.isArray(data) && data.length > 0;
+  
+  // 🔥 1. Φιλτράρουμε τιμές null, undefined, 0
+  const cleanData = (Array.isArray(data) ? data : []).filter(
+    (d) => d[valueKey] !== null && d[valueKey] !== undefined && d[valueKey] > 0
+  );
+
+  // 🔥 2. Όλα τα labels = "Building"
+  const transformedData = cleanData.map((d) => ({
+    ...d,
+    label: "Building",
+  }));
+
+
 
   return (
     <div className="rounded-xl bg-white shadow-md p-6 space-y-4 border border-blue-gray-100">
@@ -34,18 +47,15 @@ export function MetricBarChart({
         <div style={{ width: "100%", height }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
-              margin={{ top: 20, right: 30, left: 10, bottom: 50 }}
+              data={transformedData}
+              margin={{ top: 20, right: 30, left: 10, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
               
               <XAxis
                 dataKey="name"
-                angle={-35}
-                textAnchor="end"
-                interval={0}
-                height={70}
-                tick={{ fill: "#475569", fontSize: 12 }}
+                tick={false}    // κρύβει τα ticks
+                axisLine={false} // κρύβει τον άξονα }}
               />
 
               <YAxis

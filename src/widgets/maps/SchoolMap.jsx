@@ -40,7 +40,7 @@ export function SchoolMap({ schools }) {
         <div className="space-y-2">
           {schools.map((s) => (
             <label
-              key={s.building_name}
+              key={s.name}
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-gray-50 cursor-pointer"
             >
               <input

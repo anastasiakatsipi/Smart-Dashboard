@@ -6,19 +6,10 @@ export function Footer({ brandName, brandLink, routes }) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="py-2">
+    <footer className="py-2 px-12">
       <div className="flex w-full flex-wrap items-center justify-center gap-6 px-2 md:justify-between">
         <Typography variant="small" className="font-normal text-inherit">
-          &copy; {year}, made with{" "}
-          <HeartIcon className="-mt-0.5 inline-block h-3.5 w-3.5 text-red-600" /> by{" "}
-          <a
-            href={brandLink}
-            target="_blank"
-            className="transition-colors hover:text-blue-500 font-bold"
-          >
-            {brandName}
-          </a>{" "}
-          for a better web.
+          &copy; {year}
         </Typography>
         <ul className="flex items-center gap-4">
           {routes.map(({ name, path }) => (
@@ -41,10 +32,9 @@ export function Footer({ brandName, brandLink, routes }) {
 }
 
 Footer.defaultProps = {
-  brandName: "Creative Tim",
+  brandName: "",
   brandLink: "https://www.creative-tim.com",
   routes: [
-    { name: "Creative Tim", path: "https://www.creative-tim.com" },
     { name: "About Us", path: "https://www.creative-tim.com/presentation" },
     { name: "Blog", path: "https://www.creative-tim.com/blog" },
     { name: "License", path: "https://www.creative-tim.com/license" },

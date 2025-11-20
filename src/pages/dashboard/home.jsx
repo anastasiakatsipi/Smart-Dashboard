@@ -132,7 +132,7 @@ export function Home() {
             <div>
               <Typography variant="h5" className="font-bold">Environment</Typography>
               <Typography color="gray" className="text-sm">
-                CO₂, temperature, humidity & air quality.
+                Values for CO₂, temperature, humidity & air quality.    
               </Typography>
             </div>
           </div>
