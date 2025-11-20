@@ -65,7 +65,7 @@ export function EnergyMap({ devices = [] }) {
       {/* ---------- MAP AREA ---------- */}
       <div
         className="flex-1 rounded-xl overflow-hidden border border-blue-gray-100 shadow-md"
-        style={{ height: "500px" }}
+        style={{ height: "450px" }}
       >
         <MapContainer
           center={[36.44, 28.22]}

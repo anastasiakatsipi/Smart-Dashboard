@@ -58,7 +58,7 @@ export function SchoolMap({ schools }) {
       {/* --- RIGHT MAP AREA --- */}
       <div
         className="flex-1 rounded-xl overflow-hidden border border-blue-gray-100 shadow-md"
-        style={{ height: "500px" }}   // <– Keeps map inside container
+        style={{ height: "450px" }}   // <– Keeps map inside container
       >
         <MapContainer
           center={[36.44, 28.22]}
