@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
-// Fix leaflet icons
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -18,7 +18,7 @@ export function MobilityMap({ sensors = [], lights = [] }) {
     ...lights.map((d) => ({ ...d, type: "light" })),
   ];
 
-  // Use ONLY deviceName as unique identifier
+
   const [selected, setSelected] = useState(allDevices.map((d) => d.deviceName));
 
   const toggleDevice = (deviceName) => {
