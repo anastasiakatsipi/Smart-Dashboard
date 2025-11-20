@@ -26,8 +26,6 @@ export function Energy() {
 
   return (
     <div className="p-6 lg:p-10 space-y-6">
-      
-
       <Card className="shadow-md border border-blue-gray-100">
         <CardHeader floated={false} shadow={false} className="p-4 flex items-center justify-between">
           <Typography variant="h2" color="blue-gray" className="font-bold">
