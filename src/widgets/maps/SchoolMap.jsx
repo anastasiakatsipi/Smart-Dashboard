@@ -109,34 +109,79 @@ export function SchoolMap({ schools }) {
                 eventHandlers={{ click: () => setSelectedBuilding(s) }}
               >
                 <Popup>
-                  <strong>{s.name}</strong> <br />
+                  <strong>{s.displayName ?? s.name}</strong>
+                  <br />
+                  <small className="text-gray-600">
+                    Last update: {s.dateObserved ?? "N/A"}
+                  </small>
+                  <hr />
+                  {s.LVOC !== undefined && (
+                    <>
+                      {s.co2 !== null && (
+                        <MetricRow
+                          label="CO₂"
+                          value={s.co2}
+                          unit="ppm"
+                          metric="co2"
+                          building={s}
+                          onRangeSelect={handleRangeSelect}
+                        />
+                      )}
 
-                  <MetricRow
-                    label="CO₂"
-                    value={s.co2}
-                    unit="ppm"
-                    metric="co2"
-                    building={s}
-                    onRangeSelect={handleRangeSelect}
-                  />
+                      {s.temperature !== null && (
+                        <MetricRow
+                          label="Temperature"
+                          value={s.temperature}
+                          unit="°C"
+                          metric="temperature"
+                          building={s}
+                          onRangeSelect={handleRangeSelect}
+                        />
+                      )}
 
-                  <MetricRow
-                    label="Temperature"
-                    value={s.temperature}
-                    unit="°C"
-                    metric="temperature"
-                    building={s}
-                    onRangeSelect={handleRangeSelect}
-                  />
+                      {s.LVOC !== null && <MetricRow label="LVOC" value={s.LVOC} unit="ppb" />}
+                      {s.PM1 !== null && <MetricRow label="PM1" value={s.PM1} unit="µg/m³" />}
+                      {s.PM25 !== null && <MetricRow label="PM2.5" value={s.PM25} unit="µg/m³" />}
+                      {s.humidity !== null && <MetricRow label="Humidity" value={s.humidity} unit="%" />}
+                      {s.outdoor_temperature !== null && (
+                        <MetricRow label="Outdoor Temp" value={s.outdoor_temperature} unit="°C" />
+                      )}
+                    </>
+                  )}
+                  {s.wind_speed !== undefined && (
+                    <>
+                      {s.temperature !== null && (
+                        <MetricRow label="Temperature" value={s.temperature} unit="°C" />
+                      )}
+
+                      {s.humidity !== null && (
+                        <MetricRow label="Humidity" value={s.humidity} unit="%" />
+                      )}
+
+                      {s.wind_speed !== null && (
+                        <MetricRow label="Wind Speed" value={s.wind_speed} unit="km/h" />
+                      )}
+
+                      {s.wind_direction !== null && (
+                        <MetricRow label="Wind Direction" value={s.wind_direction} unit="°" />
+                      )}
+
+                      {s.precipitation !== null && (
+                        <MetricRow label="Precipitation" value={s.precipitation} unit="mm" />
+                      )}
+
+                      {s.pressure !== null && (
+                        <MetricRow label="Pressure" value={s.pressure} unit="hPa" />
+                      )}
+                    </>
+                  )}
                 </Popup>
+
               </Marker>
             ))}
           </MapContainer>
         </div>
-
       </div>
-
-      {/* FULL WIDTH CHART BELOW BOTH */}
       <HistoricPanel
         metric={selectedMetric}
         data={historicData}

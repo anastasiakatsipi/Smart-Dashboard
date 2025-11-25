@@ -52,7 +52,7 @@ export function Environment() {
           ...s,
           displayName: ALLOWED_STATIONS[s.name],
         }));
-
+        
       setRows([...filteredBuildings, ...filteredStations]);
 
     } catch (err) {

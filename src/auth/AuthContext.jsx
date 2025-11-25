@@ -29,9 +29,7 @@ function isTokenValid(token) {
 // -------------------------------
 //   Load roles from .env
 // -------------------------------
-const AVAILABLE_ROLES = import.meta.env.VITE_ROLES
-  ? import.meta.env.VITE_ROLES.split(",")
-  : [];
+const AVAILABLE_ROLES = import.meta.env.VITE_ROLES ? import.meta.env.VITE_ROLES.split(",") : [] ;
 
 const DEFAULT_ROLE = import.meta.env.VITE_DEFAULT_ROLE;
 
@@ -98,5 +96,5 @@ export function AuthProvider({ children }) {
     [token, user]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}> {children} </AuthContext.Provider>;
 }
