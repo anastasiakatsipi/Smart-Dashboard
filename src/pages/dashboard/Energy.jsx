@@ -68,8 +68,10 @@ export function Energy() {
   }, []);
 
   return (
-    <div className="p-6 lg:p-10 space-y-6">
+    <div className="p-6 lg:p-10 space-y-8 w-full mx-auto max-w-7xl">
       <Card className="shadow-md border border-blue-gray-100">
+
+        {/* HEADER */}
         <CardHeader
           floated={false}
           shadow={false}
@@ -89,11 +91,14 @@ export function Energy() {
           </Button>
         </CardHeader>
 
-        <CardBody className="h-[500px]">
+        {/* BODY — ΕΔΩ ΜΠΑΙΝΕΙ ΤΟ ENERGYMAP */}
+        <CardBody className="pb-4">
           <EnergyMap devices={devices} />
         </CardBody>
+
       </Card>
     </div>
+
   );
 }
 

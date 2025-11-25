@@ -2,6 +2,10 @@
 import React, { useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import MetricRow from "@/widgets/tables/MetricRow";
+import HistoricPanel from "@/widgets/panels/HistoricPanel";
+import { fetchHistoricData } from "@/services/snap/history";
+import { createRange } from "@/utils/dateRanges";
 
 // Fix leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -12,11 +16,13 @@ L.Icon.Default.mergeOptions({
 });
 
 export function EnergyMap({ devices = [] }) {
+  const [selected, setSelected] = useState(devices.map((d) => d.name));
 
-  // Μοναδικό κλειδί = deviceName
-  const [selected, setSelected] = useState(
-    devices.map((d) => d.deviceName)
-  );
+  // For historic panel
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [historicData, setHistoricData] = useState([]);
+  const [selectedMetric, setSelectedMetric] = useState("");
+  const [loadingHistoric, setLoadingHistoric] = useState(false);
 
   const toggleDevice = (deviceName) => {
     setSelected((prev) =>
@@ -26,81 +32,158 @@ export function EnergyMap({ devices = [] }) {
     );
   };
 
-  const filtered = devices.filter((d) =>
-    selected.includes(d.name)
+  const filtered = devices.filter((d) => selected.includes(d.name));
+
+  // ----- HISTORIC RANGE HANDLER -----
+  const handleRangeSelect = async (building, rangeKey, metric) => {
+  if (!building.serviceUri) {
+    console.warn("❌ NO serviceUri, historic cannot load.");
+    return;
+  }
+
+  setLoadingHistoric(true);
+  setSelectedBuilding(building);
+  setSelectedMetric(metric);
+
+  const { from, to } = createRange(rangeKey);
+
+  const data = await fetchHistoricData(
+    building.serviceUri,
+    metric,
+    `${from}`,
+    `${to}`
   );
 
+  setHistoricData(data);
+  setLoadingHistoric(false);
+};
+
+
   return (
-    <div className="flex w-full h-full gap-4 overflow-hidden">
+    <div className="w-full h-full flex flex-col gap-4">
 
-      {/* ---------- SIDEBAR ---------- */}
-      <div
-        className="w-64 bg-white rounded-xl shadow-md border border-blue-gray-100 p-4 flex-shrink-0"
-        style={{ maxHeight: "100%", overflowY: "auto" }}
-      >
-        <h4 className="text-sm font-bold text-blue-gray-700 mt-4 mb-2">
-          Select Energy Points
-        </h4>
+      {/* ---------- TOP: SIDEBAR + MAP ---------- */}
+      <div className="flex w-full gap-4">
 
-        <div className="space-y-2">
-          {devices.map((d) => (
-            <label
-              key={d.name}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-gray-50 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(d.name)}
-                onChange={() => toggleDevice(d.name)}
-                className="w-4 h-4 accent-blue-gray-700"
-              />
-              <span className="text-blue-gray-700 text-sm">{d.displayName ?? d.name}</span>
 
-            </label>
-          ))}
+        {/* Sidebar */}
+        <div
+          className="w-64 bg-white rounded-xl shadow-md border p-4 flex-shrink-0"
+          style={{ height: "450px", overflowY: "auto" }}
+        >
+          <h4 className="text-sm font-bold text-blue-gray-700 mt-4 mb-2">
+            Select Energy Points
+          </h4>
+
+          <div className="space-y-2">
+            {devices.map((d) => (
+              <label
+                key={d.name}
+                className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-gray-50 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.includes(d.name)}
+                  onChange={() => toggleDevice(d.name)}
+                  className="w-4 h-4 accent-blue-gray-700"
+                />
+                <span className="text-blue-gray-700 text-sm">
+                  {d.displayName ?? d.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Map */}
+        <div
+          className="flex-1 rounded-xl overflow-hidden border shadow-md"
+          style={{ height: "450px" }}
+        >
+          <MapContainer
+            center={[36.44, 28.22]}
+            zoom={12}
+            scrollWheelZoom
+            className="w-full h-full"
+          >
+            <TileLayer
+              attribution="© OpenStreetMap contributors"
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+
+            {filtered.map((d, i) => (
+              <Marker
+                key={i}
+                position={[d.lat, d.lng]}
+                eventHandlers={{ click: () => setSelectedBuilding(d) }}
+              >
+                <Popup>
+                  <strong>{d.displayName ?? d.name}</strong>
+                  <br />
+                  <small className="text-gray-600">
+                    Last update: {d.dateObserved ?? "N/A"}
+                  </small>
+                  <hr />
+
+                  {/* ----- HISTORIC METRICS ----- */}
+                  {d.power_consumption !== null && (
+                    <MetricRow
+                      label="Power Consumption"
+                      value={d.power_consumption}
+                      unit="kWh"
+                      metric="power_consumption"
+                      building={d}
+                      onRangeSelect={handleRangeSelect}
+                    />
+                  )}
+
+                  {d.temperature !== null && (
+                    <MetricRow
+                      label="Temperature"
+                      value={d.temperature}
+                      unit="°C"
+                      metric="temperature"
+                      building={d}
+                      onRangeSelect={handleRangeSelect}
+                    />
+                  )}
+
+                  {d.humidity !== null && (
+                    <MetricRow
+                      label="Humidity"
+                      value={d.humidity}
+                      unit="%"
+                      metric="humidity"
+                      building={d}
+                      onRangeSelect={handleRangeSelect}
+                    />
+                  )}
+
+                  {d.fuel_tank !== null && (
+                    <MetricRow
+                      label="Fuel Tank"
+                      value={d.fuel_tank}
+                      unit="L"
+                      metric="fuel_tank"
+                      building={d}
+                      onRangeSelect={handleRangeSelect}
+                    />
+                  )}
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         </div>
       </div>
 
-      {/* ---------- MAP AREA ---------- */}
-      <div
-        className="flex-1 rounded-xl overflow-hidden border border-blue-gray-100 shadow-md"
-        style={{ height: "450px" }}
-      >
-        <MapContainer
-          center={[36.44, 28.22]}
-          zoom={12}
-          scrollWheelZoom
-          className="w-full h-full"
-        >
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
-          {filtered.map((d) => (
-            <Marker
-              key={d.name}
-              position={[d.lat, d.lng]}
-            >
-              <Popup>
-                <strong>{d.name}</strong>
-                <br />
-                <small className="text-gray-600">
-                  Last update: {d.dateObserved}
-                </small>
-                <hr />
-
-                <div>
-                  Fuel tank: <b>{d.fuel_tank ?? "N/A"}</b> L<br />
-                  Power consumption: <b>{d.power_consumption ?? "N/A"}</b> kWh<br />
-                  Temperature: <b>{d.temperature ?? "N/A"}</b> °C<br />
-                  Humidity: <b>{d.humidity ?? "N/A"}</b> %
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
+      {/* ---------- HISTORIC PANEL BELOW ---------- */}
+      <HistoricPanel
+        className="h-72"
+        metric={selectedMetric}
+        data={historicData}
+        building={selectedBuilding}
+        loading={loadingHistoric}
+      />
     </div>
   );
 }

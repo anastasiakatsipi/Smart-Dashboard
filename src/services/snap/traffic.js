@@ -23,7 +23,7 @@ export async function fetchTrafficLights() {
       deviceName: props.deviceName || props.name || "Unknown Light",
       lat: f.geometry?.coordinates?.[1],
       lng: f.geometry?.coordinates?.[0],
-
+      serviceUri: props.serviceUri ?? null,
       dateObserved: val.dateObserved ?? null,
       passenger_counter: val.passenger_counter ?? null,
     };
@@ -50,7 +50,7 @@ export async function fetchTrafficSensors() {
       deviceName: props.deviceName || props.name || "Unknown Sensor",
       lat: f.geometry?.coordinates?.[1],
       lng: f.geometry?.coordinates?.[0],
-
+      serviceUri: props.serviceUri ?? null,
       dateObserved: val.dateObserved ?? null,
       speed: val.speed ?? null,
       traffic_level: val.traffic_level ?? null,

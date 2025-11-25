@@ -99,12 +99,17 @@ export function SchoolMap({ schools }) {
                                    metric="temperature" building={s} onRangeSelect={handleRangeSelect} />
                       )}
 
-                      {s.LVOC !== null && <MetricRow label="LVOC" value={s.LVOC} unit="ppb" />}
-                      {s.PM1 !== null && <MetricRow label="PM1" value={s.PM1} unit="µg/m³" />}
-                      {s.PM25 !== null && <MetricRow label="PM2.5" value={s.PM25} unit="µg/m³" />}
-                      {s.humidity !== null && <MetricRow label="Humidity" value={s.humidity} unit="%" />}
+                      {s.LVOC !== null && <MetricRow label="LVOC" value={s.LVOC} unit="ppb" 
+                                  metric="LVOC" building={s} onRangeSelect={handleRangeSelect} />}
+                      {s.PM1 !== null && <MetricRow label="PM1" value={s.PM1} unit="µg/m³" 
+                                  metric="PM1" building={s} onRangeSelect={handleRangeSelect}/>}
+                      {s.PM25 !== null && <MetricRow label="PM2.5" value={s.PM25} unit="µg/m³" 
+                                  metric="PM25" building={s} onRangeSelect={handleRangeSelect}/>}
+                      {s.humidity !== null && <MetricRow label="Humidity" value={s.humidity} unit="%" 
+                                  metric="humidity" building={s} onRangeSelect={handleRangeSelect}/>}
                       {s.outdoor_temperature !== null && (
-                        <MetricRow label="Outdoor Temp" value={s.outdoor_temperature} unit="°C" />
+                        <MetricRow label="Outdoor Temp" value={s.outdoor_temperature} unit="°C" 
+                                   metric="outdoor_temperature" building={s} onRangeSelect={handleRangeSelect}/>
                       )}
                     </>
                   )}

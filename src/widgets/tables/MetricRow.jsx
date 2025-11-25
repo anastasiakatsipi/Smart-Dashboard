@@ -2,25 +2,33 @@ import React from "react";
 
 export default function MetricRow({ label, value, unit, metric, building, onRangeSelect }) {
   return (
-    <div style={{ 
-      display: "flex", 
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: "6px",
-      gap: "10px"
-    }}>
-      
-      {/* Left side: Value */}
-      <div>
+    <div className="flex items-center justify-between mb-2 gap-3">
+
+      {/* Left side */}
+      <div className="text-sm text-gray-800">
         <strong>{label}:</strong> {value ?? "N/A"} {unit}
       </div>
 
-      {/* Right side: Buttons */}
-      <div style={{ display: "flex", gap: "6px" }}>
-        <button onClick={() => onRangeSelect(building, "24h", metric)}>24H</button>
-        <button onClick={() => onRangeSelect(building, "7d", metric)}>7d</button>
-        <button onClick={() => onRangeSelect(building, "1m", metric)}>1m</button>
-        <button onClick={() => onRangeSelect(building, "3m", metric)}>3m</button>
+      {/* Buttons */}
+      <div className="flex gap-2">
+        {["24h", "7d", "1m", "3m"].map((range) => (
+          <button
+            key={range}
+            onClick={() => onRangeSelect(building, range, metric)}
+            className="
+              px-2 py-1
+              text-xs 
+              rounded-md 
+              bg-gray-700
+              text-white 
+              hover:bg-gray-800 
+              transition duration-150
+              shadow-sm
+            "
+          >
+            {range}
+          </button>
+        ))}
       </div>
 
     </div>
