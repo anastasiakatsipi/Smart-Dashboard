@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Typography, Button, Card, CardHeader, CardBody } from "@material-tailwind/react";
 import { SchoolMap } from "@/widgets/maps";
-import { fetchEnvironmentData } from "@/services/snap/environment";
+import { fetchBuildingsData } from "@/services/snap/buildings";
 import { fetchWeatherStations } from "@/services/snap/weather";
 import Co2Chart from "@/widgets/charts/Co2Chart";
 import TemperatureChart from "@/widgets/charts/TemperatureChart";
@@ -31,7 +31,7 @@ export function Environment() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const buildings = await fetchEnvironmentData();
+      const buildings = await fetchBuildingsData();
       const stations = await fetchWeatherStations();
 
       // buildings that have geo

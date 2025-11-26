@@ -192,6 +192,8 @@ export function EnergyMap({ devices = [], loading }) {
         data={historicData}
         building={selectedBuilding}
         loading={loadingHistoric}
+
+        
       />
     </div>
   );

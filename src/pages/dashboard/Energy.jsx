@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Typography, Button, Card, CardHeader, CardBody } from "@material-tailwind/react";
 
-import { fetchEnvironmentData } from "@/services/snap/environment";
+import { fetchBuildingsData } from "@/services/snap/buildings";
 import EnergyMap from "@/widgets/maps/EnergyMap";
 
 export function Energy() {
@@ -33,7 +33,7 @@ export function Energy() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const result = await fetchEnvironmentData();
+      const result = await fetchBuildingsData();
 
       const withGeo = result.filter((d) => d.lat && d.lng);
 
@@ -77,7 +77,6 @@ export function Energy() {
           shadow={false}
           className="p-4 flex items-center justify-between"
         >
-
         <div className="flex flex-col">
           <Typography variant="h3" color="blue-gray" className="font-bold flex items-center gap-2">
             Energy Dashboard
@@ -87,9 +86,6 @@ export function Energy() {
             Monitor energy consumption and fuel levels across all municipal buildings.
           </Typography>
         </div>
-
-
-          
           <Button
             color="dark"
             onClick={loadData}

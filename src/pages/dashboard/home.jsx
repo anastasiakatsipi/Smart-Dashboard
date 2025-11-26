@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
-import { fetchEnvironmentData } from "@/services/snap/environment";
+import { fetchBuildingsData } from "@/services/snap/buildings";
 import { fetchTrafficLights, fetchTrafficSensors } from "@/services/snap/traffic";
 
 export function Home() {
@@ -27,7 +27,7 @@ export function Home() {
     try {
       // Fetch everything in parallel
       const [env, lights, sensors] = await Promise.all([
-        fetchEnvironmentData(),
+        fetchBuildingsData(),
         fetchTrafficLights(),
         fetchTrafficSensors(),
         minimumDelay,   // wait at least 3 seconds

@@ -38,9 +38,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
           <Typography
             variant="h6"
             color={sidenavType === "dark" ? "white" : "blue-gray"}
-          >
-            {brandName}
-          </Typography>
+           > Smart City Dashboard</Typography>
         </Link>
 
         <IconButton
