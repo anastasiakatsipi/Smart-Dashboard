@@ -6,7 +6,7 @@ import {
   TruckIcon,
 } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
-
+import { getAccessToken, decodeJwt } from "@/services/authService";
 import { fetchBuildingsData } from "@/services/snap/buildings";
 import { fetchTrafficLights, fetchTrafficSensors } from "@/services/snap/traffic";
 
@@ -44,7 +44,19 @@ export function Home() {
 
     setLoading(false);
   };
+    useEffect(() => {
+  const token = getAccessToken();
+  const decoded = decodeJwt(token);
 
+  console.log("Decoded JWT:", decoded);
+  
+  
+
+  loadData();
+
+  const interval = setInterval(loadData, 300000);
+  return () => clearInterval(interval);
+}, []);
   useEffect(() => {
     loadData(); // load once on mount
 

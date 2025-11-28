@@ -1,263 +1,69 @@
-import { createClient } from "jsr:@supabase/supabase-js@2";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-function json(data, status = 200, headers = {}) {
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Create global admin client
+const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_ANON_KEY"));
+// Helper return JSON
+function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      "Content-Type": "application/json",
-      ...headers
+      "Content-Type": "application/json"
     }
   });
 }
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type,Authorization"
-};
+// Verify user using Supabase Auth
+async function requireAuth(req) {
+  const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+  if (!token) return {
+    error: "Missing token"
+  };
+  const supabase = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_ANON_KEY"), {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  });
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) return {
+    error: "Invalid JWT"
+  };
+  return {
+    user: data.user
+  };
+}
 Deno.serve(async (req)=>{
-  try {
-    if (req.method === 'OPTIONS') {
-      return new Response(null, {
-        status: 204,
-        headers: CORS_HEADERS
-      });
-    }
-    const url = new URL(req.url);
-    let path = url.pathname;
-    // Accept both /api/* and /functions/v1/api/* prefixes
-    const prefixes = [
-      "/functions/v1/api",
-      "/api",
-      "/functions/v1/api/",
-      "/api/"
-    ];
-    for (const p of prefixes){
-      if (path === p) {
-        path = '/';
-        break;
-      }
-      if (path.startsWith(p)) {
-        path = path.slice(p.length);
-        break;
-      }
-    }
-    if (path === "") path = "/";
-    console.log("METHOD:", req.method, "PATH:", path);
-    if (req.method === "GET" && path === "/health") {
-      return json({
-        ok: true,
-        message: "API is running"
-      }, 200, CORS_HEADERS);
-    }
-    if (req.method === "GET" && path === "/buildings") {
-      const from = url.searchParams.get("from");
-      const to = url.searchParams.get("to");
-
-      let query = supabase
-        .from("building_data")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      // Apply FROM date filter
-      if (from) {
-        query = query.gte("created_at", from);
-      }
-
-      // Apply TO date filter
-      if (to) {
-        // Προσθέτουμε μια μέρα για να συμπεριλάβει όλη την ημέρα
-        const toEnd = new Date(to);
-        toEnd.setDate(toEnd.getDate() + 1);
-        query = query.lt("created_at", toEnd.toISOString());
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("DB Error (GET /buildings):", error);
-        return json({
-          error: "Internal server error"
-        }, 500, CORS_HEADERS);
-      }
-
-      return json({
-        buildings: data
-      }, 200, CORS_HEADERS);
-    }
-
-    if (req.method === "GET" && path === "/traffic_lights") {
-      const from = url.searchParams.get("from");
-      const to = url.searchParams.get("to");
-
-      let query = supabase
-        .from("traffic_lights_data")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      // FROM filter
-      if (from) {
-        query = query.gte("created_at", from);
-      }
-
-      // TO filter (έως και την ημέρα αυτή)
-      if (to) {
-        const toEnd = new Date(to);
-        toEnd.setDate(toEnd.getDate() + 1);
-        query = query.lt("created_at", toEnd.toISOString());
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("DB Error (GET /traffic_lights):", error);
-        return json({ error: "Internal server error" }, 500, CORS_HEADERS);
-      }
-
-      return json({ traffic_lights: data }, 200, CORS_HEADERS);
-    }
-
-
-    if (req.method === "GET" && path === "/traffic_sensors") {
-      const from = url.searchParams.get("from");
-      const to = url.searchParams.get("to");
-
-      let query = supabase
-        .from("traffic_sensors_data")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      // FROM filter
-      if (from) {
-        query = query.gte("created_at", from);
-      }
-
-      // TO filter (μέχρι το τέλος της ημέρας)
-      if (to) {
-        const toEnd = new Date(to);
-        toEnd.setDate(toEnd.getDate() + 1);
-        query = query.lt("created_at", toEnd.toISOString());
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("DB Error (GET /traffic_sensors):", error);
-        return json({ error: "Internal server error" }, 500, CORS_HEADERS);
-      }
-
-      return json({ traffic_sensors: data }, 200, CORS_HEADERS);
-    }
-
-    // GET /latest
-    if (req.method === "GET" && path === "/latest") {
-      // Fetch latest buildings
-      const { data: buildings, error: bErr } = await supabase.from("building_data_latest").select("*");
-      // Fetch latest traffic lights
-      const { data: lights, error: lErr } = await supabase.from("traffic_lights_data_latest").select("*");
-      // Fetch latest traffic sensors
-      const { data: sensors, error: sErr } = await supabase.from("traffic_sensors_data_latest").select("*");
-      // Error handling
-      if (bErr || lErr || sErr) {
-        console.error("Error fetching latest data", {
-          buildingsError: bErr,
-          lightsError: lErr,
-          sensorsError: sErr
-        });
-        return json({
-          error: "Internal server error"
-        }, 500, CORS_HEADERS);
-      }
-      // Success response
-      return json({
-        latest: {
-          buildings,
-          traffic_lights: lights,
-          traffic_sensors: sensors
-        }
-      }, 200, CORS_HEADERS);
-    }
-    // GET /history
-    if (req.method === "GET" && path === "/history") {
-      const deviceName = url.searchParams.get("deviceName");
-      // Query base
-      let buildingsQuery = supabase.from("building_data").select("*").order("created_at", {
-        ascending: false
-      });
-      let lightsQuery = supabase.from("traffic_lights_data").select("*").order("created_at", {
-        ascending: false
-      });
-      let sensorsQuery = supabase.from("traffic_sensors_data").select("*").order("created_at", {
-        ascending: false
-      });
-      // If deviceName is given → filter by deviceName
-      if (deviceName) {
-        buildingsQuery = buildingsQuery.eq("payload->>deviceName", deviceName);
-        lightsQuery = lightsQuery.eq("payload->>deviceName", deviceName);
-        sensorsQuery = sensorsQuery.eq("payload->>deviceName", deviceName);
-      }
-      const [{ data: buildings, error: bErr }, { data: lights, error: lErr }, { data: sensors, error: sErr }] = await Promise.all([
-        buildingsQuery,
-        lightsQuery,
-        sensorsQuery
-      ]);
-      // Error handling
-      if (bErr || lErr || sErr) {
-        console.error("Error fetching history", {
-          buildingsError: bErr,
-          lightsError: lErr,
-          sensorsError: sErr
-        });
-        return json({
-          error: "Internal server error"
-        }, 500, CORS_HEADERS);
-      }
-      // Success response
-      return json({
-        history: {
-          buildings,
-          traffic_lights: lights,
-          traffic_sensors: sensors
-        }
-      }, 200, CORS_HEADERS);
-    }
-    if (req.method === "POST" && path === "/insert") {
-      let body;
-      try {
-        body = await req.json();
-      } catch (e) {
-        return json({
-          error: "Invalid JSON body"
-        }, 400, CORS_HEADERS);
-      }
-      if (!body || Object.keys(body).length === 0) {
-        return json({
-          error: "Empty payload"
-        }, 400, CORS_HEADERS);
-      }
-      const { error } = await supabase.from("building_data").insert([
-        {
-          payload: body
-        }
-      ]);
-      if (error) {
-        console.error("DB Error (POST /insert):", error);
-        return json({
-          error: "Internal server error"
-        }, 500, CORS_HEADERS);
-      }
-      return json({
-        success: true
-      }, 201, CORS_HEADERS);
-    }
+  const url = new URL(req.url);
+  const path = url.pathname.replace("/api", "");
+  // Public health check
+  if (path === "/health") {
     return json({
-      error: "Route not found"
-    }, 404, CORS_HEADERS);
-  } catch (err) {
-    console.error("Unhandled error in Edge Function:", err);
-    return json({
-      error: "Internal server error"
-    }, 500, CORS_HEADERS);
+      ok: true
+    });
   }
+  // Protected routes
+  const auth = await requireAuth(req);
+  if (auth.error) return json({
+    error: auth.error
+  }, 401);
+  if (path === "/buildings") {
+    const { data } = await supabaseAdmin.from("building_data").select("*");
+    return json({
+      buildings: data
+    });
+  }
+  if (path === "/latest") {
+    const buildings = await supabaseAdmin.from("building_data_latest").select("*");
+    const lights = await supabaseAdmin.from("traffic_lights_data_latest").select("*");
+    const sensors = await supabaseAdmin.from("traffic_sensors_data_latest").select("*");
+    return json({
+      latest: {
+        buildings: buildings.data,
+        traffic_lights: lights.data,
+        traffic_sensors: sensors.data
+      }
+    });
+  }
+  return json({
+    error: "Not Found"
+  }, 404);
 });
