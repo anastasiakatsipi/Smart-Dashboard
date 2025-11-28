@@ -4,10 +4,10 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const supabase = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
 // SNAP AUTH (hardcoded)
 const SNAP_TOKEN_URL = "https://snap4.rhodes.gr/auth/realms/master/protocol/openid-connect/token/";
-const SNAP_USERNAME = "userareamanager"; // ΒΑΛΕ ΤΟ username
-const SNAP_PASSWORD = "wP127tqLkmRe6SUf"; // ΒΑΛΕ ΤΟ password
-const SNAP_CLIENT_ID = "mobility01"; // ΒΑΛΕ ΤΟ client_id
-const SNAP_CLIENT_SECRET = "wP127tqLkmRe6SUf"; // ΒΑΛΕ ΤΟ client_secret
+const SNAP_USERNAME = Deno.env.get("SNAP_USERNAME");
+const SNAP_PASSWORD = Deno.env.get("SNAP_PASSWORD");
+const SNAP_CLIENT_ID = Deno.env.get("SNAP_CLIENT_ID");
+const SNAP_CLIENT_SECRET = Deno.env.get("SNAP_CLIENT_SECRET");
 // SNAP api base
 const SNAP_BASE = "https://snap4.rhodes.gr/ServiceMap/api/v1/iot-search/";
 const BBOX = "36.0;27.7;36.6;28.3";
