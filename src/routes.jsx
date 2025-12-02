@@ -22,28 +22,28 @@ export const routes = [
         name: "dashboard",
         path: "/home",
         element: <Home />,
-        roles: ["admin", "user", "manager"], // allowed roles
+        roles: ["areamanager","admin", "user", "manager"], // allowed roles
       },
       {
         icon: <BoltIcon {...icon} />,
         name: "energy",
         path: "/energy",
         element: <Energy />,
-        roles: ["admin"], // μόνο admin
+        roles: ["areamanager","admin", "manager"], // μόνο admin
       },
       {
         icon: <GlobeAmericasIcon {...icon} />,
         name: "environment",
         path: "/environment",
         element: <Environment />,
-        roles: ["admin", "manager"], // admin + manager
+        roles: ["areamanager","admin", "manager"], // admin + manager
       },
       {
         icon: <TruckIcon {...icon} />,
         name: "mobility",
         path: "/mobility",
         element: <Mobility />,
-        roles: ["user", "admin"], // user + admin
+        roles: ["areamanager","user", "admin"], // user + admin
       },
     ],
   },

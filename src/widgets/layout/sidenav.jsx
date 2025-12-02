@@ -13,8 +13,6 @@ import { useContext } from "react";
 import { AuthContext } from "@/auth/AuthContext";
 
 export function Sidenav({ brandImg, brandName, routes }) {
-  // 🔥 GET CURRENT ROLE
-  const { currentRole } = useContext(AuthContext);
 
   const [controller, dispatch] = useMaterialTailwindController();
   const { sidenavColor, sidenavType, openSidenav } = controller;
@@ -24,7 +22,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
     white: "bg-white shadow-sm",
     transparent: "bg-transparent",
   };
-  console.log("Current role:", currentRole);
   
 
   return (
@@ -56,7 +53,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
       <div className="m-4">
         {routes.map(({ layout, title, pages }, key) => (
           <ul key={key} className="mb-4 flex flex-col gap-1">
-
             {title && (
               <li className="mx-3.5 mt-4 mb-2">
                 <Typography
@@ -68,42 +64,34 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 </Typography>
               </li>
             )}
-
-            {/* 🔥 ROLE-BASED FILTER HERE */}
-            {pages
-              .filter((p) => 
-                !p.roles || 
-                p.roles.includes("*") ||
-                p.roles.includes(currentRole)
-              )
-              .map(({ icon, name, path }) => (
-                <li key={name}>
-                  <NavLink to={`/${layout}${path}`}>
-                    {({ isActive }) => (
-                      <Button
-                        variant={isActive ? "gradient" : "text"}
-                        color={
-                          isActive
-                            ? sidenavColor
-                            : sidenavType === "dark"
-                            ? "white"
-                            : "blue-gray"
-                        }
-                        className="flex items-center gap-4 px-4 capitalize"
-                        fullWidth
+            {pages.map(({ icon, name, path }) => (
+              <li key={name}>
+                <NavLink to={`/${layout}${path}`}>
+                  {({ isActive }) => (
+                    <Button
+                      variant={isActive ? "gradient" : "text"}
+                      color={
+                        isActive
+                          ? sidenavColor
+                          : sidenavType === "dark"
+                          ? "white"
+                          : "blue-gray"
+                      }
+                      className="flex items-center gap-4 px-4 capitalize"
+                      fullWidth
+                    >
+                      {icon}
+                      <Typography
+                        color="inherit"
+                        className="font-medium capitalize"
                       >
-                        {icon}
-                        <Typography
-                          color="inherit"
-                          className="font-medium capitalize"
-                        >
-                          {name}
-                        </Typography>
-                      </Button>
-                    )}
-                  </NavLink>
-                </li>
-              ))}
+                        {name}
+                      </Typography>
+                    </Button>
+                  )}
+                </NavLink>
+              </li>
+            ))}
           </ul>
         ))}
       </div>

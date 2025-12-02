@@ -9,6 +9,9 @@ import { Link } from "react-router-dom";
 import { getAccessToken, decodeJwt } from "@/services/authService";
 import { fetchBuildingsData } from "@/services/snap/buildings";
 import { fetchTrafficLights, fetchTrafficSensors } from "@/services/snap/traffic";
+import { cardsConfig } from "@/configs/cards-config";
+import { kpiConfig } from "@/configs/kpi-config";
+
 
 export function Home() {
   const [envCount, setEnvCount] = useState(0);
@@ -17,54 +20,82 @@ export function Home() {
   const [trafficSensorsCount, setTrafficSensorsCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // ---------- GET USER ROLE ----------
+  const token = getAccessToken();
+  const decoded = decodeJwt(token);
+  const userRole = decoded?.role || "guest";
+  const userRoles = (decoded?.realm_access?.roles || [])
+  .map(r => r.toLowerCase())
+  .filter((v, i, arr) => arr.indexOf(v) === i); // remove duplicates
+
+  console.log("USER ROLES:", userRoles);
+  
+  //console.log("DECODEDJWT:", decoded);
+  // ---------- ICON MAP ----------
+  const icons = {
+    energy: <BoltIcon className="h-10 w-10 text-yellow-600" />,
+    environment: <GlobeAmericasIcon className="h-10 w-10 text-green-700" />,
+    mobility: <TruckIcon className="h-10 w-10 text-red-600" />,
+  };
+
+  // ---------- FILTER CARDS BY USER ROLE ----------
+  // console.log("USER ROLE IS:", userRole);
+  // console.log("FILTERING CARDS FOR ROLES:", cardsConfig.map(c => c.roles));
+
+  const visibleCards = cardsConfig.filter(card =>
+    card.roles.some(role => userRoles.includes(role))
+  );
+
+
+  const visibleKpis = {
+    environmentSensors: kpiConfig
+      .find(k => k.id === "environmentSensors")
+      .roles.some(role => userRoles.includes(role.toLowerCase())),
+
+    energyMeters: kpiConfig
+      .find(k => k.id === "energyMeters")
+      .roles.some(role => userRoles.includes(role.toLowerCase())),
+
+    trafficLights: kpiConfig
+      .find(k => k.id === "trafficLights")
+      .roles.some(role => userRoles.includes(role.toLowerCase())),
+
+    trafficSensors: kpiConfig
+      .find(k => k.id === "trafficSensors")
+      .roles.some(role => userRoles.includes(role.toLowerCase())),
+  };
+
+
+
   const loadData = async () => {
     setLoading(true);
 
     const minimumDelay = new Promise((resolve) =>
-      setTimeout(resolve, 1500)  // 3 seconds minimum
+      setTimeout(resolve, 1500)
     );
 
     try {
-      // Fetch everything in parallel
       const [env, lights, sensors] = await Promise.all([
         fetchBuildingsData(),
         fetchTrafficLights(),
         fetchTrafficSensors(),
-        minimumDelay,   // wait at least 3 seconds
+        minimumDelay,
       ]);
 
       setEnvCount(env.length);
       setEnergyCount(env.filter((e) => e.power_consumption !== null).length);
       setTrafficLightsCount(lights.length);
       setTrafficSensorsCount(sensors.length);
-
     } catch (err) {
       console.error("Dashboard fetch error:", err);
     }
 
     setLoading(false);
   };
-    useEffect(() => {
-  const token = getAccessToken();
-  const decoded = decodeJwt(token);
 
-  console.log("Decoded JWT:", decoded);
-  
-  
-
-  loadData();
-
-  const interval = setInterval(loadData, 300000);
-  return () => clearInterval(interval);
-}, []);
   useEffect(() => {
-    loadData(); // load once on mount
-
-    // refresh every 5 minutes
-    const interval = setInterval(() => {
-      loadData();
-    }, 300000);
-
+    loadData();
+    const interval = setInterval(loadData, 300000);
     return () => clearInterval(interval);
   }, []);
 
@@ -97,132 +128,107 @@ export function Home() {
       {/* ---------- KPI CARDS ---------- */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
-        <Card className="border border-blue-gray-100 shadow-sm p-4">
-          <CardBody>
-            <Typography variant="h6" color="blue-gray">
-              Environment Sensors
-            </Typography>
-            {loading ? (
-              <Skeleton />
-            ) : (
-              <Typography className="text-3xl font-bold text-blue-gray-800 mt-2">
-                {envCount}
+        {/* ENVIRONMENT SENSORS */}
+        {visibleKpis.environmentSensors && (
+          <Card className="border border-blue-gray-100 shadow-sm p-4">
+            <CardBody>
+              <Typography variant="h6" color="blue-gray">
+                Environment Sensors
               </Typography>
-            )}
-          </CardBody>
-        </Card>
+              {loading ? (
+                <Skeleton />
+              ) : (
+                <Typography className="text-3xl font-bold text-blue-gray-800 mt-2">
+                  {envCount}
+                </Typography>
+              )}
+            </CardBody>
+          </Card>
+        )}
 
-        <Card className="border border-blue-gray-100 shadow-sm p-4">
-          <CardBody>
-            <Typography variant="h6" color="blue-gray">
-              Energy Meters
-            </Typography>
-            {loading ? (
-              <Skeleton />
-            ) : (
-              <Typography className="text-3xl font-bold text-blue-gray-800 mt-2">
-                {energyCount}
+        {/* ENERGY METERS */}
+        {visibleKpis.energyMeters && (
+          <Card className="border border-blue-gray-100 shadow-sm p-4">
+            <CardBody>
+              <Typography variant="h6" color="blue-gray">
+                Energy Meters
               </Typography>
-            )}
-          </CardBody>
-        </Card>
+              {loading ? (
+                <Skeleton />
+              ) : (
+                <Typography className="text-3xl font-bold text-blue-gray-800 mt-2">
+                  {energyCount}
+                </Typography>
+              )}
+            </CardBody>
+          </Card>
+        )}
 
-        <Card className="border border-blue-gray-100 shadow-sm p-4">
-          <CardBody>
-            <Typography variant="h6" color="blue-gray">
-              Traffic Lights
-            </Typography>
-            {loading ? (
-              <Skeleton />
-            ) : (
-              <Typography className="text-3xl font-bold text-blue-gray-800 mt-2">
-                {trafficLightsCount}
+        {/* TRAFFIC LIGHTS */}
+        {visibleKpis.trafficLights && (
+          <Card className="border border-blue-gray-100 shadow-sm p-4">
+            <CardBody>
+              <Typography variant="h6" color="blue-gray">
+                Traffic Lights
               </Typography>
-            )}
-          </CardBody>
-        </Card>
+              {loading ? (
+                <Skeleton />
+              ) : (
+                <Typography className="text-3xl font-bold text-blue-gray-800 mt-2">
+                  {trafficLightsCount}
+                </Typography>
+              )}
+            </CardBody>
+          </Card>
+        )}
 
-        <Card className="border border-blue-gray-100 shadow-sm p-4">
-          <CardBody>
-            <Typography variant="h6" color="blue-gray">
-              Traffic Sensors
-            </Typography>
-            {loading ? (
-              <Skeleton />
-            ) : (
-              <Typography className="text-3xl font-bold text-blue-gray-800 mt-2">
-                {trafficSensorsCount}
+        {/* TRAFFIC SENSORS */}
+        {visibleKpis.trafficSensors && (
+          <Card className="border border-blue-gray-100 shadow-sm p-4">
+            <CardBody>
+              <Typography variant="h6" color="blue-gray">
+                Traffic Sensors
               </Typography>
-            )}
-          </CardBody>
-        </Card>
-
+              {loading ? (
+                <Skeleton />
+              ) : (
+                <Typography className="text-3xl font-bold text-blue-gray-800 mt-2">
+                  {trafficSensorsCount}
+                </Typography>
+              )}
+            </CardBody>
+          </Card>
+        )}
       </div>
 
       {/* ---------- FEATURE CARDS ---------- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        {/* ENERGY */}
-        <Card className="p-6 border border-blue-gray-100 shadow-md hover:shadow-lg transition">
-          <div className="flex items-center gap-4">
-            <BoltIcon className="h-10 w-10 text-yellow-600" />
-            <div>
-              <Typography variant="h5" className="font-bold">
-                Energy
-              </Typography>
-              <Typography color="gray" className="text-sm">
-                Monitor energy consumption & fuel levels.
-              </Typography>
+        {visibleCards.map((card) => (
+          <Card 
+            key={card.id} 
+            className="p-6 border border-blue-gray-100 shadow-md hover:shadow-lg transition"
+          >
+            <div className="flex items-center gap-4">
+              {icons[card.icon]}
+              <div>
+                <Typography variant="h5" className="font-bold">
+                  {card.title}
+                </Typography>
+                <Typography color="gray" className="text-sm">
+                  {card.description}
+                </Typography>
+              </div>
             </div>
-          </div>
-          <Link to="/dashboard/energy">
-            <Button color="blue-gray" className="mt-6" fullWidth>
-              View Energy
-            </Button>
-          </Link>
-        </Card>
 
-        {/* ENVIRONMENT */}
-        <Card className="p-6 border border-blue-gray-100 shadow-md hover:shadow-lg transition">
-          <div className="flex items-center gap-4">
-            <GlobeAmericasIcon className="h-10 w-10 text-green-700" />
-            <div>
-              <Typography variant="h5" className="font-bold">
-                Environment
-              </Typography>
-              <Typography color="gray" className="text-sm">
-                Values for CO₂, temperature, humidity & air quality.
-              </Typography>
-            </div>
-          </div>
-          <Link to="/dashboard/environment">
-            <Button color="blue-gray" className="mt-6" fullWidth>
-              View Environment
-            </Button>
-          </Link>
-        </Card>
-
-        {/* MOBILITY */}
-        <Card className="p-6 border border-blue-gray-100 shadow-md hover:shadow-lg transition">
-          <div className="flex items-center gap-4">
-            <TruckIcon className="h-10 w-10 text-red-600" />
-            <div>
-              <Typography variant="h5" className="font-bold">
-                Mobility
-              </Typography>
-              <Typography color="gray" className="text-sm">
-                Traffic lights, vehicle counters & real-time flows.
-              </Typography>
-            </div>
-          </div>
-          <Link to="/dashboard/mobility">
-            <Button color="blue-gray" className="mt-6" fullWidth>
-              View Mobility
-            </Button>
-          </Link>
-        </Card>
-
+            <Link to={card.path}>
+              <Button color="blue-gray" className="mt-6" fullWidth>
+                View {card.title}
+              </Button>
+            </Link>
+          </Card>
+        ))}
       </div>
+
     </div>
   );
 }

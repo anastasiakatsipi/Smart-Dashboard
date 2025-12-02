@@ -11,24 +11,44 @@ import routes from "@/routes";
 import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
 import ProtectedRoute from "@/auth/ProtectedRoute";
 import NotAuthorized from "@/pages/dashboard/NotAuthorized";
+import { getAccessToken, decodeJwt } from "@/services/authService";
 
 
 export function Dashboard() {
   const [controller, dispatch] = useMaterialTailwindController();
   const { sidenavType } = controller;
+  const token = getAccessToken();
+  const decoded = decodeJwt(token);
 
+  const userRoles = (decoded?.realm_access?.roles || [])
+    .map(role => role.toLowerCase())
+    .filter((v, i, arr) => arr.indexOf(v) === i);
 
-  const sidebarRoutes = routes.filter(r => r.layout === "dashboard");
+  console.log("SIDENAV USER ROLES:", userRoles);
+  //const sidebarRoutes = routes.filter(r => r.layout === "dashboard");
+  const filteredRoutes = routes
+  .filter(r => r.layout === "dashboard")
+  .map(routeGroup => ({
+    ...routeGroup,
+    pages: routeGroup.pages.filter(page =>
+      page.roles?.some(role =>
+        userRoles.includes(role.toLowerCase()) || role === "*"
+      )
+    )
+  }));
+
 
   return (
     <div className="min-h-screen bg-blue-gray-50/50">
       
       <Sidenav
-        routes={sidebarRoutes}   // Εδώ εμφανίζονται *μόνο* τα dashboard pages!
+        routes={filteredRoutes}
         brandImg={
           sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
         }
       />
+
+
 
       <div className="p-5 xl:ml-80">
         <DashboardNavbar/>

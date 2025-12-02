@@ -1,29 +1,31 @@
-import { useContext } from "react";
 import { Navigate } from "react-router-dom";
-import { AuthContext } from "@/auth/AuthContext";
+import { getAccessToken, decodeJwt } from "@/services/authService";
 
 export default function ProtectedRoute({ children, roles }) {
-  const { isAuthenticated, currentRole } = useContext(AuthContext);
+  const token = getAccessToken();
+  const decoded = decodeJwt(token);
 
-  // console.log("roles raw:", roles);
-  // console.log("currentRole raw:", currentRole);
-  // console.log("currentRole EXACT:", JSON.stringify(currentRole));
-  // console.log("includes?:", roles.includes(currentRole));
-  // console.log(
-  //   "normalized includes?:",
-  //   roles.map((r) => r.trim().toLowerCase()).includes(currentRole?.trim?.().toLowerCase())
-  // );
-
-
-  if (!isAuthenticated) {
+  // Αν δεν υπάρχει token → redirect login
+  if (!token) {
     return <Navigate to="/auth/sign-in" replace />;
   }
 
-  if (roles && !roles.includes(currentRole)) {
-    return <Navigate to="/dashboard/403" replace />;
+  // Βγάζουμε ΟΛΟΥΣ τους Keycloak ρόλους
+  const userRoles = (decoded?.realm_access?.roles || [])
+    .map(r => r.toLowerCase());
 
+  // Αν η σελίδα έχει καθορισμένους ρόλους
+  if (roles && roles.length > 0) {
+    const normalizedRoles = roles.map(r => r.toLowerCase());
+
+    const hasAccess = normalizedRoles.some(role =>
+      userRoles.includes(role)
+    );
+
+    if (!hasAccess) {
+      return <Navigate to="/dashboard/403" replace />;
+    }
   }
-
 
   return children;
 }
