@@ -8,8 +8,7 @@ const supabase = createClient(
 );
 
 // SNAP credentials
-const SNAP_TOKEN_URL =
-  "https://snap4.rhodes.gr/auth/realms/master/protocol/openid-connect/token/";
+const SNAP_TOKEN_URL ="https://snap4.rhodes.gr/auth/realms/master/protocol/openid-connect/token/";
 const SNAP_USERNAME = Deno.env.get("SNAP_USERNAME");
 const SNAP_PASSWORD = Deno.env.get("SNAP_PASSWORD");
 const SNAP_CLIENT_ID = Deno.env.get("SNAP_CLIENT_ID");

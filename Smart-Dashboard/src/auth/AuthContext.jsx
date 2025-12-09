@@ -6,7 +6,7 @@ import {
   getAccessToken,
   decodeJwt,
 } from "../services/authService.js";
-
+import { refreshTokens } from "../services/authService.js";
 export const AuthContext = createContext(null);
 
 // -------------------------------
@@ -60,41 +60,48 @@ export function AuthProvider({ children }) {
   const hasRole = (role) => user?.role === role;
 
   const value = useMemo(
-    () => ({
-      token,
-      user,
-      isAuthenticated: isTokenValid(token),
+  () => ({
+    token,
+    user,
+    isAuthenticated: isTokenValid(token),
 
-      roles: AVAILABLE_ROLES,
-      currentRole: user?.role,
-      hasRole,
+    roles: AVAILABLE_ROLES,
+    currentRole: user?.role,
+    hasRole,
 
-      async login({
+    async login({
+      username,
+      password,
+      client_id,
+      client_secret,
+      remember = true,
+    }) {
+      const data = await svcLogin({
         username,
         password,
         client_id,
         client_secret,
-        remember = true,
-      }) {
-        const data = await svcLogin({
-          username,
-          password,
-          client_id,
-          client_secret,
-          remember,
-        });
+        remember,
+      });
+      setToken(data.access_token);
+      return data;
+    },
 
-        setToken(data.access_token);
-        return data;
-      },
+    logout() {
+      svcLogout();
+      setToken(null);
+    },
 
-      logout() {
-        svcLogout();
-        setToken(null);
-      },
-    }),
-    [token, user]
-  );
+    // 🔥 ΝΕΟ: refresh tokens από AuthContext
+    async refresh() {
+      const newToken = await refreshTokens();
+      setToken(newToken);
+      return newToken;
+    },
+  }),
+  [token, user]
+);
+
 
   return <AuthContext.Provider value={value}> {children} </AuthContext.Provider>;
 }

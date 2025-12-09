@@ -21,7 +21,8 @@
     "react-dom": "18.2.0",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "6.17.0",
-    "recharts": "^3.4.1"
+    "recharts": "^3.4.1",
+    "swagger-ui-react": "^5.30.3"
   },
   "devDependencies": {
     "@types/react": "18.2.31",

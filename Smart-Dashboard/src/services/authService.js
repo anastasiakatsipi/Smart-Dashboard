@@ -84,14 +84,15 @@ export async function login({
   s.setItem("access_token", data.access_token);
   if (data.refresh_token) s.setItem("refresh_token", data.refresh_token);
 
-  // ✅ αποθηκεύουμε client_id / secret για μελλοντικό refresh
+  //αποθηκεύουμε client_id / secret για μελλοντικό refresh
   saveClientCredentials(remember, client_id, client_secret);
 
   return data;
 }
 
-// ✅ ΝΕΟ: refreshTokens – προσπαθεί να πάρει νέο access_token
+// refreshTokens – προσπαθεί να πάρει νέο access_token
 export async function refreshTokens() {
+  console.log("%c[AUTH] Refreshing token…", "color: #00aaff; font-weight: bold;");
   const refresh_token = getRefreshToken();
   const { client_id, client_secret } = getClientCredentials();
 

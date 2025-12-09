@@ -24,8 +24,8 @@ export function Dashboard() {
     .map(role => role.toLowerCase())
     .filter((v, i, arr) => arr.indexOf(v) === i);
 
-  //console.log("SIDENAV USER ROLES:", userRoles);
-  //const sidebarRoutes = routes.filter(r => r.layout === "dashboard");
+  console.log("SIDENAV USER ROLES:", userRoles);
+  const sidebarRoutes = routes.filter(r => r.layout === "dashboard");
   const filteredRoutes = routes
   .filter(r => r.layout === "dashboard")
   .map(routeGroup => ({
