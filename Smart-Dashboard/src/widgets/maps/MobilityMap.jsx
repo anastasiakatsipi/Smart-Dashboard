@@ -7,6 +7,7 @@ import MetricRow from "@/widgets/tables/MetricRow";
 import HistoricPanel from "@/widgets/panels/HistoricPanel";
 import { fetchHistoricData } from "@/services/snap/history";
 import { createRange } from "@/utils/dateRanges";
+import { fetchHistoricFromSupabase } from "@/services/snap/myHistoric";
 
 // Fix default Leaflet icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -34,7 +35,6 @@ export const defaultIcon = new L.Icon({
 
 export function MobilityMap({ sensors = [], lights = [] }) {
 
-  // Combine all devices into one list
   const allDevices = [
     ...sensors.map((d) => ({ ...d, type: "sensor" })),
     ...lights.map((d) => ({ ...d, type: "light" })),
@@ -60,30 +60,89 @@ export function MobilityMap({ sensors = [], lights = [] }) {
   const [historicData, setHistoricData] = useState([]);
   const [loadingHistoric, setLoadingHistoric] = useState(false);
 
-  // ------- HISTORIC RANGE HANDLER -------
   const handleRangeSelect = async (device, rangeKey, metric) => {
+  if (!device) return;
 
-    if (!device.serviceUri) {
-      console.warn("❌ No serviceUri for device:", device.deviceName);
-      return;
-    }
+  setLoadingHistoric(true);
+  setSelectedDevice(device);
+  setSelectedMetric(metric);
 
-    setLoadingHistoric(true);
-    setSelectedDevice(device);
-    setSelectedMetric(metric);
+  const { from, to } = createRange(rangeKey);
 
-    const { from, to } = createRange(rangeKey);
+  const table =
+    device.type === "light"
+      ? "traffic_lights_data"
+      : "traffic_sensors_data";
 
-    const data = await fetchHistoricData(
-      device.serviceUri,
-      metric,
-      `${from}`,
-      `${to}`
+  try {
+    // Fetch all rows from Supabase
+    const data = await fetchHistoricFromSupabase(
+      table,
+      new Date(from).toISOString(),
+      new Date(to).toISOString()
     );
-    
-    setHistoricData(data);
+
+    console.log("Raw Supabase data:", data);
+
+    // Filter rows by selected device and extract metric
+    const deviceData = data
+      .filter((row) => {
+        const deviceName =
+          row.payload?.deviceName || row.deviceName || row.payload?.name;
+        return deviceName === device.deviceName;
+      })
+      .map((row) => {
+        let value;
+
+        if (row.payload && Object.prototype.hasOwnProperty.call(row.payload, metric)) {
+          value = row.payload[metric];
+        } else if (row.payload?.values && Object.prototype.hasOwnProperty.call(row.payload.values, metric)) {
+          value = row.payload.values[metric];
+        }
+
+        let timestamp = row.timestamp || row.created_at;
+        if (typeof timestamp === "number") timestamp = new Date(timestamp).toISOString();
+
+        return { timestamp, value };
+      })
+      .filter((d) => d.value !== undefined);
+
+    // Aggregate daily
+    const dailyData = deviceData.reduce((acc, { timestamp, value }) => {
+      const date = new Date(timestamp);
+      const dayKey = `${String(date.getDate()).padStart(2, "0")}/${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}/${date.getFullYear()}`;
+
+      if (!acc[dayKey]) acc[dayKey] = { sum: 0, count: 0 };
+      acc[dayKey].sum += value;
+      acc[dayKey].count += 1;
+
+      return acc;
+    }, {});
+
+    const aggregatedData = Object.entries(dailyData).map(([day, { sum, count }]) => ({
+      timestamp: day,
+      value: metric === "speed" ? sum / count : sum, // average speed, sum for counters
+    }));
+
+    // Sort by date
+    aggregatedData.sort((a, b) => {
+      const [d1, m1, y1] = a.timestamp.split("/").map(Number);
+      const [d2, m2, y2] = b.timestamp.split("/").map(Number);
+      return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+    });
+
+    console.log("Aggregated daily data:", aggregatedData);
+    setHistoricData(aggregatedData);
+  } catch (err) {
+    console.error("Error fetching historic data:", err);
+    setHistoricData([]);
+  } finally {
     setLoadingHistoric(false);
-  };
+  }
+};
+
 
   return (
     <div className="flex flex-col w-full gap-4 overflow-y-auto">
@@ -98,8 +157,10 @@ export function MobilityMap({ sensors = [], lights = [] }) {
         >
           <h4 className="text-sm font-bold text-blue-gray-700 mt-2 mb-2">📡 Traffic Sensors</h4>
           {sensors.map((s) => (
-            <label key={s.deviceName}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-gray-50 cursor-pointer">
+            <label
+              key={`sensor-${s.deviceName}`}
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-gray-50 cursor-pointer"
+            >
               <input
                 type="checkbox"
                 checked={selected.includes(s.deviceName)}
@@ -112,8 +173,10 @@ export function MobilityMap({ sensors = [], lights = [] }) {
 
           <h4 className="text-sm font-bold text-blue-gray-700 mt-4 mb-2">🚥 Traffic Lights</h4>
           {lights.map((l) => (
-            <label key={l.deviceName}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-gray-50 cursor-pointer">
+            <label
+              key={`light-${l.deviceName}`}
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-gray-50 cursor-pointer"
+            >
               <input
                 type="checkbox"
                 checked={selected.includes(l.deviceName)}
@@ -143,7 +206,7 @@ export function MobilityMap({ sensors = [], lights = [] }) {
 
             {filteredDevices.map((d) => (
               <Marker
-                key={d.deviceName}
+                key={`marker-${d.deviceName}`}
                 position={[d.lat, d.lng]}
                 icon={
                   d.type === "light"
@@ -166,6 +229,7 @@ export function MobilityMap({ sensors = [], lights = [] }) {
                     <>
                       {d.speed !== null && (
                         <MetricRow
+                          key={`${d.deviceName}-speed`}
                           label="Speed"
                           value={d.speed}
                           unit="km/h"
@@ -177,6 +241,7 @@ export function MobilityMap({ sensors = [], lights = [] }) {
 
                       {d.vehicle_counter !== null && (
                         <MetricRow
+                          key={`${d.deviceName}-vehicle_counter`}
                           label="Vehicle Counter"
                           value={d.vehicle_counter}
                           unit="vehicles"
@@ -188,6 +253,7 @@ export function MobilityMap({ sensors = [], lights = [] }) {
 
                       {d.traffic_level !== null && (
                         <MetricRow
+                          key={`${d.deviceName}-traffic_level`}
                           label="Traffic Level"
                           value={d.traffic_level}
                           unit=""
@@ -203,6 +269,7 @@ export function MobilityMap({ sensors = [], lights = [] }) {
                     <>
                       {d.passenger_counter !== null && (
                         <MetricRow
+                          key={`${d.deviceName}-passenger_counter`}
                           label="Passenger Counter"
                           value={d.passenger_counter}
                           unit="people"

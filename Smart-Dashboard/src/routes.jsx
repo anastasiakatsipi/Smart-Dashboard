@@ -43,7 +43,7 @@ export const routes = [
         name: "mobility",
         path: "/mobility",
         element: <Mobility />,
-        roles: ["areamanager","user", "admin"],
+        roles: ["areamanager","user", "admin","manager"],
       },
     ],
   },

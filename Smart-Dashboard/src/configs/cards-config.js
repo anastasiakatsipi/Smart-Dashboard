@@ -21,6 +21,6 @@ export const cardsConfig = [
     description: "Traffic lights, vehicle counters & real-time flows.",
     icon: "mobility",
     path: "/dashboard/mobility",
-    roles: ["areamanager", "guest"],
+    roles: ["areamanager", "manager", "guest"],
   }
 ];

@@ -1,7 +1,12 @@
 // src/services/snap/traffic.js
 import { apiSnap } from "@/services";
+import { supabase } from "@/lib/supabaseClient";
 
 const bbox = "36.0;27.7;36.6;28.3";
+
+// ------------------------------------------------------------
+// SNAP4CITY FUNCTIONS (τα αφήνουμε όπως είναι)
+// ------------------------------------------------------------
 
 export async function fetchTrafficLights() {
   const { data } = await apiSnap.get("/ServiceMap/api/v1/iot-search/", {
@@ -55,6 +60,56 @@ export async function fetchTrafficSensors() {
       speed: val.speed ?? null,
       traffic_level: val.traffic_level ?? null,
       vehicle_counter: val.vehicle_counter ?? val.vehile_counter ?? null,
+    };
+  });
+}
+
+// ------------------------------------------------------------
+// SUPABASE FUNCTIONS (νέες)
+// ------------------------------------------------------------
+
+export async function fetchTrafficLightsSupabase() {
+  const { data, error } = await supabase
+    .from("traffic_lights_data_latest")
+    .select("*");
+
+  if (error) throw error;
+
+  return data.map((row) => {
+    const p = typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload;
+
+    return {
+      type: "traffic_light",
+      deviceName: p.deviceName ?? "Unknown Light",
+      lat: p.lat,
+      lng: p.lng,
+      dateObserved: p.dateObserved ?? p.values?.dateObserved ?? null,
+      passenger_counter: p.passenger_counter ?? p.values?.passenger_counter ?? null,
+      serviceUri: p.serviceUri ?? null,
+    };
+  });
+}
+
+export async function fetchTrafficSensorsSupabase() {
+  const { data, error } = await supabase
+    .from("traffic_sensors_data_latest")
+    .select("*");
+
+  if (error) throw error;
+
+  return data.map((row) => {
+    const p = typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload;
+
+    return {
+      type: "traffic_sensor",
+      deviceName: p.deviceName ?? "Unknown Sensor",
+      lat: p.lat,
+      lng: p.lng,
+      dateObserved: p.dateObserved ?? p.values?.dateObserved ?? null,
+      speed: p.speed ?? p.values?.speed ?? null,
+      traffic_level: p.traffic_level ?? p.values?.traffic_level ?? null,
+      vehicle_counter: p.vehicle_counter ?? p.values?.vehicle_counter ?? null,
+      serviceUri: p.serviceUri ?? null,
     };
   });
 }

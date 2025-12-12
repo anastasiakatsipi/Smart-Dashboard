@@ -9,10 +9,10 @@ export const kpiConfig = [
   },
   {
     id: "trafficLights",
-    roles: ["areamanager", "guest"],
+    roles: ["areamanager", "manager", "guest"],
   },
   {
     id: "trafficSensors",
-    roles: ["areamanager",  "guest"],
+    roles: ["areamanager", "manager", "guest"],
   },
 ];
